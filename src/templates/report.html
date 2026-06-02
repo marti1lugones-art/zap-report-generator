@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+/* ═══════════════════════════════════════════
+   VARIABLES Y RESET
+═══════════════════════════════════════════ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:        #0d1117;
+  --bg2:       #161b22;
+  --bg3:       #1c2128;
+  --border:    #30363d;
+  --accent:    #00b4d8;
+  --accent2:   #0077b6;
+  --text:      #e6edf3;
+  --muted:     #8b949e;
+  --critical:  #ff3b3b;
+  --high:      #ff6b35;
+  --medium:    #ffb800;
+  --low:       #4fc3f7;
+  --info:      #78909c;
+}
+
+body {
+  font-family: "DejaVu Sans", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 10pt;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════
+   CONFIGURACIÓN DE PÁGINAS
+═══════════════════════════════════════════ */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@page content {
+  size: A4;
+  margin: 20mm 18mm 22mm 18mm;
+
+  @bottom-center {
+    content: "CONFIDENCIAL — " string(client_name) " — Informe de Auditoría de Seguridad";
+    font-family: "DejaVu Sans", Arial, sans-serif;
+    font-size: 7pt;
+    color: #555;
+  }
+
+  @bottom-right {
+    content: "Página " counter(page);
+    font-family: "DejaVu Sans", Arial, sans-serif;
+    font-size: 7.5pt;
+    color: #555;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   PORTADA
+═══════════════════════════════════════════ */
+.cover {
+  page: cover;
+  width: 210mm;
+  height: 297mm;
+  background: #0d1117;
+  display: block;
+  page-break-after: always;
+}
+
+@page cover {
+  size: A4;
+  margin: 0;
+}
+
+.cover-top-bar {
+  background: #00b4d8;
+  height: 6mm;
+  width: 100%;
+}
+
+.cover-body {
+  padding: 30mm 22mm 0 22mm;
+}
+
+.cover-label {
+  font-size: 9pt;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #00b4d8;
+  margin-bottom: 8mm;
+}
+
+.cover-title {
+  font-size: 28pt;
+  font-weight: bold;
+  color: #e6edf3;
+  line-height: 1.2;
+  margin-bottom: 3mm;
+}
+
+.cover-subtitle {
+  font-size: 14pt;
+  color: #8b949e;
+  margin-bottom: 20mm;
+}
+
+.cover-divider {
+  border: none;
+  border-top: 1px solid #30363d;
+  margin: 0 0 12mm 0;
+}
+
+.cover-meta {
+  margin-bottom: 20mm;
+}
+
+.cover-meta-row {
+  display: table;
+  width: 100%;
+  margin-bottom: 5mm;
+}
+
+.cover-meta-label {
+  display: table-cell;
+  width: 35mm;
+  font-size: 8pt;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #555e6a;
+  vertical-align: top;
+  padding-top: 1mm;
+}
+
+.cover-meta-value {
+  display: table-cell;
+  font-size: 13pt;
+  font-weight: bold;
+  color: #e6edf3;
+}
+
+.cover-meta-value.url {
+  font-size: 10pt;
+  color: #00b4d8;
+  word-break: break-all;
+}
+
+.cover-confidential {
+  background: #1c2128;
+  border-left: 3px solid #ff6b35;
+  padding: 4mm 6mm;
+  margin-top: 25mm;
+}
+
+.cover-confidential p {
+  font-size: 8pt;
+  color: #8b949e;
+  line-height: 1.5;
+}
+
+.cover-confidential strong {
+  color: #ff6b35;
+}
+
+.cover-bottom {
+  position: absolute;
+  bottom: 8mm;
+  left: 22mm;
+  right: 22mm;
+}
+
+.cover-bottom-inner {
+  border-top: 1px solid #30363d;
+  padding-top: 4mm;
+  display: table;
+  width: 100%;
+}
+
+.cover-bottom-left {
+  display: table-cell;
+  font-size: 8pt;
+  color: #555e6a;
+}
+
+.cover-bottom-right {
+  display: table-cell;
+  text-align: right;
+  font-size: 8pt;
+  color: #30363d;
+}
+
+/* ═══════════════════════════════════════════
+   CONTENIDO PRINCIPAL
+═══════════════════════════════════════════ */
+.content {
+  page: content;
+}
+
+/* Encabezados de sección */
+.section-header {
+  border-bottom: 2px solid #00b4d8;
+  padding-bottom: 3mm;
+  margin-bottom: 7mm;
+  margin-top: 8mm;
+}
+
+.section-number {
+  display: inline-block;
+  background: #00b4d8;
+  color: #0d1117;
+  font-size: 8pt;
+  font-weight: bold;
+  padding: 1mm 3mm;
+  margin-right: 3mm;
+  vertical-align: middle;
+}
+
+.section-title {
+  font-size: 15pt;
+  font-weight: bold;
+  color: #e6edf3;
+  vertical-align: middle;
+}
+
+/* ═══════════════════════════════════════════
+   RESUMEN EJECUTIVO
+═══════════════════════════════════════════ */
+.executive-summary {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-left: 4px solid #00b4d8;
+  padding: 6mm 8mm;
+  margin-bottom: 8mm;
+}
+
+.executive-summary p {
+  font-size: 10pt;
+  line-height: 1.8;
+  color: #c9d1d9;
+  text-align: justify;
+}
+
+/* ═══════════════════════════════════════════
+   TARJETAS DE SEVERIDAD
+═══════════════════════════════════════════ */
+.severity-cards {
+  display: table;
+  width: 100%;
+  margin-bottom: 8mm;
+  border-collapse: separate;
+  border-spacing: 3mm 0;
+}
+
+.severity-card {
+  display: table-cell;
+  text-align: center;
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 4mm 2mm;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.severity-card-count {
+  font-size: 24pt;
+  font-weight: bold;
+  line-height: 1;
+  margin-bottom: 1mm;
+}
+
+.severity-card-label {
+  font-size: 7.5pt;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #8b949e;
+}
+
+/* ═══════════════════════════════════════════
+   TABLA DE RESUMEN
+═══════════════════════════════════════════ */
+.findings-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8mm;
+  font-size: 9pt;
+}
+
+.findings-table thead tr {
+  background: #1c2128;
+}
+
+.findings-table th {
+  padding: 3mm 4mm;
+  text-align: left;
+  font-size: 8pt;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #8b949e;
+  border-bottom: 1px solid #30363d;
+}
+
+.findings-table td {
+  padding: 3mm 4mm;
+  border-bottom: 1px solid #21262d;
+  vertical-align: top;
+  color: #c9d1d9;
+}
+
+.findings-table tr:nth-child(even) td {
+  background: #0d1117;
+}
+
+.findings-table tr:nth-child(odd) td {
+  background: #161b22;
+}
+
+/* ═══════════════════════════════════════════
+   BADGE DE SEVERIDAD
+═══════════════════════════════════════════ */
+.badge {
+  display: inline-block;
+  padding: 1mm 3mm;
+  border-radius: 2px;
+  font-size: 7.5pt;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge-Critical      { background: #ff3b3b22; color: #ff3b3b; border: 1px solid #ff3b3b55; }
+.badge-High          { background: #ff6b3522; color: #ff6b35; border: 1px solid #ff6b3555; }
+.badge-Medium        { background: #ffb80022; color: #ffb800; border: 1px solid #ffb80055; }
+.badge-Low           { background: #4fc3f722; color: #4fc3f7; border: 1px solid #4fc3f755; }
+.badge-Informational { background: #78909c22; color: #90a4ae; border: 1px solid #78909c55; }
+
+/* ═══════════════════════════════════════════
+   HALLAZGOS DETALLADOS
+═══════════════════════════════════════════ */
+.severity-group-header {
+  page-break-before: always;
+  padding: 5mm 6mm;
+  margin-bottom: 6mm;
+  border-left: 5px solid;
+}
+
+.severity-group-header h2 {
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.severity-group-header p {
+  font-size: 9pt;
+  margin-top: 1mm;
+  opacity: 0.8;
+}
+
+/* Primera sección sin page-break */
+.severity-group-header.first-group {
+  page-break-before: auto;
+}
+
+.finding-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  margin-bottom: 6mm;
+  page-break-inside: avoid;
+}
+
+.finding-card-header {
+  padding: 4mm 5mm;
+  border-bottom: 1px solid #30363d;
+  display: table;
+  width: 100%;
+}
+
+.finding-card-header-left {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.finding-card-header-right {
+  display: table-cell;
+  text-align: right;
+  vertical-align: middle;
+  width: 45mm;
+}
+
+.finding-name {
+  font-size: 11pt;
+  font-weight: bold;
+  color: #e6edf3;
+  margin-bottom: 1.5mm;
+}
+
+.finding-meta {
+  font-size: 7.5pt;
+  color: #8b949e;
+}
+
+.finding-meta span {
+  margin-right: 4mm;
+}
+
+.finding-body {
+  padding: 5mm;
+}
+
+.finding-section {
+  margin-bottom: 5mm;
+}
+
+.finding-section:last-child {
+  margin-bottom: 0;
+}
+
+.finding-section-title {
+  font-size: 8pt;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #00b4d8;
+  margin-bottom: 2mm;
+  padding-bottom: 1mm;
+  border-bottom: 1px solid #1c2128;
+}
+
+.finding-section-body {
+  font-size: 9.5pt;
+  color: #c9d1d9;
+  line-height: 1.7;
+  text-align: justify;
+}
+
+/* Tabla de instancias/evidencia */
+.evidence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+  margin-top: 2mm;
+}
+
+.evidence-table th {
+  background: #1c2128;
+  padding: 2mm 3mm;
+  text-align: left;
+  color: #8b949e;
+  font-size: 7.5pt;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid #30363d;
+}
+
+.evidence-table td {
+  padding: 2mm 3mm;
+  border: 1px solid #21262d;
+  color: #c9d1d9;
+  vertical-align: top;
+  word-break: break-all;
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 7.5pt;
+}
+
+.evidence-table tr:nth-child(even) td {
+  background: #0d1117;
+}
+
+.evidence-table tr:nth-child(odd) td {
+  background: #161b22;
+}
+
+.evidence-empty {
+  color: #555e6a;
+  font-style: italic;
+  font-size: 8.5pt;
+}
+
+/* ═══════════════════════════════════════════
+   GRÁFICO
+═══════════════════════════════════════════ */
+.chart-container {
+  background: #12121e;
+  border: 1px solid #30363d;
+  padding: 5mm;
+  margin-bottom: 8mm;
+  text-align: center;
+}
+
+.chart-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ═══════════════════════════════════════════
+   METODOLOGÍA
+═══════════════════════════════════════════ */
+.methodology-grid {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 3mm 3mm;
+  margin-bottom: 6mm;
+}
+
+.methodology-item {
+  display: table-cell;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-left: 3px solid #00b4d8;
+  padding: 4mm 5mm;
+  width: 50%;
+  vertical-align: top;
+}
+
+.methodology-item h4 {
+  font-size: 9pt;
+  font-weight: bold;
+  color: #00b4d8;
+  margin-bottom: 2mm;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.methodology-item p {
+  font-size: 8.5pt;
+  color: #8b949e;
+  line-height: 1.6;
+}
+
+.methodology-list {
+  margin-top: 4mm;
+}
+
+.methodology-list-item {
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 3mm 5mm;
+  margin-bottom: 2mm;
+  display: table;
+  width: 100%;
+}
+
+.methodology-list-icon {
+  display: table-cell;
+  width: 8mm;
+  color: #00b4d8;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+.methodology-list-text {
+  display: table-cell;
+  font-size: 9pt;
+  color: #c9d1d9;
+  vertical-align: middle;
+}
+
+/* ═══════════════════════════════════════════
+   UTILIDADES
+═══════════════════════════════════════════ */
+.page-break { page-break-before: always; }
+.no-break   { page-break-inside: avoid; }
+.text-muted { color: #8b949e; }
+.text-accent { color: #00b4d8; }
+.mono { font-family: "DejaVu Sans Mono", monospace; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     PORTADA
+═══════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-top-bar"></div>
+  <div class="cover-body">
+
+    <div class="cover-label">Informe de Ciberseguridad · Confidencial</div>
+
+    <div class="cover-title">Auditoría de<br>Seguridad Web</div>
+    <div class="cover-subtitle">Análisis de Vulnerabilidades — OWASP ZAP</div>
+
+    <hr class="cover-divider">
+
+    <div class="cover-meta">
+      <div class="cover-meta-row">
+        <div class="cover-meta-label">Cliente</div>
+        <div class="cover-meta-value">{{ client_name }}</div>
+      </div>
+      <div class="cover-meta-row">
+        <div class="cover-meta-label">URL Auditada</div>
+        <div class="cover-meta-value url">{{ target_url }}</div>
+      </div>
+      <div class="cover-meta-row">
+        <div class="cover-meta-label">Fecha</div>
+        <div class="cover-meta-value">{{ date }}</div>
+      </div>
+      <div class="cover-meta-row">
+        <div class="cover-meta-label">Auditado por</div>
+        <div class="cover-meta-value">{{ auditor }}</div>
+      </div>
+      <div class="cover-meta-row">
+        <div class="cover-meta-label">Total de hallazgos</div>
+        <div class="cover-meta-value">
+          {{ total_findings }}
+          {% if has_critical %}<span style="color:#ff3b3b; font-size:9pt; margin-left:4mm;">⚠ Incluye hallazgos CRÍTICOS</span>{% elif has_high %}<span style="color:#ff6b35; font-size:9pt; margin-left:4mm;">⚠ Incluye hallazgos de ALTA severidad</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="cover-confidential">
+      <p><strong>⚠ DOCUMENTO CONFIDENCIAL</strong> — Este informe contiene información sensible sobre la infraestructura de seguridad de {{ client_name }}. Su distribución debe limitarse exclusivamente al personal autorizado. Queda prohibida su reproducción o divulgación sin autorización expresa.</p>
+    </div>
+
+  </div>
+
+  <div class="cover-bottom">
+    <div class="cover-bottom-inner">
+      <div class="cover-bottom-left">Generado con ZAP Report Generator · Powered by Claude AI</div>
+      <div class="cover-bottom-right">{{ date }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CONTENIDO
+═══════════════════════════════════════ -->
+<div class="content">
+
+  <!-- 1. RESUMEN EJECUTIVO -->
+  <div class="section-header">
+    <span class="section-number">01</span>
+    <span class="section-title">Resumen Ejecutivo</span>
+  </div>
+
+  <div class="executive-summary">
+    {% if executive_summary %}
+      {% for paragraph in executive_summary.split('\n') %}
+        {% if paragraph.strip() %}
+          <p style="margin-bottom: 4mm;">{{ paragraph }}</p>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <p>Se realizó una auditoría de seguridad web automatizada sobre <strong>{{ target_url }}</strong>
+      utilizando OWASP ZAP. Se identificaron <strong>{{ total_findings }} hallazgo{{ 's' if total_findings != 1 else '' }}</strong>
+      de seguridad. Se recomienda abordar los hallazgos de mayor severidad de forma prioritaria.</p>
+    {% endif %}
+  </div>
+
+
+  <!-- 2. DISTRIBUCIÓN DE HALLAZGOS -->
+  <div class="section-header">
+    <span class="section-number">02</span>
+    <span class="section-title">Distribución de Hallazgos</span>
+  </div>
+
+  <!-- Tarjetas de severidad -->
+  <table class="severity-cards">
+    <tr>
+      {% for sev in ["Critical", "High", "Medium", "Low", "Informational"] %}
+      {% if severity_counts.get(sev, 0) > 0 %}
+      <td class="severity-card" style="border-top: 3px solid {{ sev | severity_color }};">
+        <div class="severity-card-count" style="color: {{ sev | severity_color }};">
+          {{ severity_counts.get(sev, 0) }}
+        </div>
+        <div class="severity-card-label">{{ sev | severity_es }}</div>
+      </td>
+      {% endif %}
+      {% endfor %}
+    </tr>
+  </table>
+
+  <!-- Gráfico -->
+  <div class="chart-container">
+    <img src="data:image/png;base64,{{ chart_b64 }}" alt="Distribución de severidades">
+  </div>
+
+  <!-- Tabla resumen -->
+  <table class="findings-table">
+    <thead>
+      <tr>
+        <th style="width: 8mm;">#</th>
+        <th style="width: 25mm;">Severidad</th>
+        <th>Vulnerabilidad</th>
+        <th style="width: 20mm;">CWE</th>
+        <th style="width: 20mm;">Instancias</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in findings %}
+      <tr>
+        <td class="text-muted">{{ loop.index }}</td>
+        <td>
+          <span class="badge badge-{{ f.risk }}">{{ f.risk | severity_es }}</span>
+        </td>
+        <td>{{ f.name }}</td>
+        <td class="mono text-muted">{% if f.cwe_id %}CWE-{{ f.cwe_id }}{% else %}—{% endif %}</td>
+        <td class="text-muted" style="text-align:center;">{{ f.count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+
+  <!-- 3. HALLAZGOS DETALLADOS -->
+  {% set first_group = True %}
+  {% for severity, group_findings in grouped_findings.items() %}
+
+  <div class="severity-group-header {% if loop.first %}first-group{% endif %}"
+       style="background: {{ severity | severity_color }}15; border-left-color: {{ severity | severity_color }};">
+    <h2 style="color: {{ severity | severity_color }};">
+      {{ severity | severity_es }} — {{ group_findings | length }} hallazgo{{ 's' if group_findings | length != 1 else '' }}
+    </h2>
+    <p style="color: #8b949e;">
+      {% if severity == "Critical" %}Requiere atención inmediata. Explotación activa probable.
+      {% elif severity == "High" %}Alta prioridad. Riesgo significativo para el negocio.
+      {% elif severity == "Medium" %}Prioridad media. Debe remediarse en el corto plazo.
+      {% elif severity == "Low" %}Impacto limitado. Remediar en ciclo de mantenimiento.
+      {% else %}Sin impacto directo. Buenas prácticas recomendadas.{% endif %}
+    </p>
+  </div>
+
+  {% for finding in group_findings %}
+  <div class="finding-card no-break">
+
+    <!-- Encabezado del hallazgo -->
+    <div class="finding-card-header">
+      <div class="finding-card-header-left">
+        <div class="finding-name">{{ finding.name }}</div>
+        <div class="finding-meta">
+          <span>Plugin: {{ finding.plugin_id or '—' }}</span>
+          {% if finding.cwe_id %}<span>CWE-{{ finding.cwe_id }}</span>{% endif %}
+          {% if finding.wasc_id %}<span>WASC-{{ finding.wasc_id }}</span>{% endif %}
+          <span>Instancias: {{ finding.count }}</span>
+        </div>
+      </div>
+      <div class="finding-card-header-right">
+        <span class="badge badge-{{ finding.risk }}">{{ finding.risk | severity_es }}</span>
+        <br>
+        <span class="text-muted" style="font-size:7.5pt; margin-top:1mm; display:block;">
+          Confianza: {{ finding.confidence | confidence_label }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Cuerpo del hallazgo -->
+    <div class="finding-body">
+
+      <!-- Descripción -->
+      <div class="finding-section">
+        <div class="finding-section-title">Descripción</div>
+        <div class="finding-section-body">
+          {{ finding.description_es or finding.description or 'Sin descripción disponible.' }}
+        </div>
+      </div>
+
+      <!-- Evidencia/Instancias -->
+      {% if finding.instances %}
+      <div class="finding-section">
+        <div class="finding-section-title">Evidencia detectada</div>
+        <table class="evidence-table">
+          <thead>
+            <tr>
+              <th style="width:45%">URL</th>
+              <th style="width:12%">Método</th>
+              <th style="width:18%">Parámetro</th>
+              <th>Evidencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inst in finding.instances[:3] %}
+            <tr>
+              <td>{{ inst.uri }}</td>
+              <td>{{ inst.method or '—' }}</td>
+              <td>{{ inst.param or '—' }}</td>
+              <td>{{ inst.evidence[:80] + '...' if inst.evidence and inst.evidence|length > 80 else inst.evidence or '—' }}</td>
+            </tr>
+            {% endfor %}
+            {% if finding.instances|length > 3 %}
+            <tr>
+              <td colspan="4" class="text-muted" style="text-align:center; font-style:italic; font-size:8pt;">
+                + {{ finding.instances|length - 3 }} instancia{{ 's' if finding.instances|length - 3 != 1 else '' }} adicional{{ 'es' if finding.instances|length - 3 != 1 else '' }} no mostrada{{ 's' if finding.instances|length - 3 != 1 else '' }}
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="finding-section">
+        <div class="finding-section-title">Evidencia detectada</div>
+        <div class="evidence-empty">No se registraron instancias específicas.</div>
+      </div>
+      {% endif %}
+
+      <!-- Solución -->
+      <div class="finding-section">
+        <div class="finding-section-title">Solución Recomendada</div>
+        <div class="finding-section-body">
+          {{ finding.solution_es or finding.solution or 'Consultar la documentación de OWASP para recomendaciones específicas.' }}
+        </div>
+      </div>
+
+      <!-- Referencias -->
+      {% if finding.reference %}
+      <div class="finding-section">
+        <div class="finding-section-title">Referencias</div>
+        <div class="finding-section-body mono" style="font-size:8pt; color:#555e6a;">
+          {% for ref in finding.reference.split('\n') %}
+            {% if ref.strip() %}<div>{{ ref.strip() }}</div>{% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div><!-- /finding-body -->
+  </div><!-- /finding-card -->
+  {% endfor %}
+  {% endfor %}
+
+
+  <!-- 4. METODOLOGÍA -->
+  <div class="section-header page-break">
+    <span class="section-number">04</span>
+    <span class="section-title">Metodología</span>
+  </div>
+
+  <p style="color:#8b949e; margin-bottom:6mm; font-size:9.5pt;">
+    Esta auditoría fue realizada utilizando herramientas y metodologías estándar de la industria,
+    alineadas con los frameworks internacionales de seguridad.
+  </p>
+
+  <table class="methodology-grid">
+    <tr>
+      <td class="methodology-item">
+        <h4>Herramienta de Escaneo</h4>
+        <p>OWASP ZAP (Zed Attack Proxy) — escáner de seguridad web de código abierto mantenido por la Open Web Application Security Project Foundation.</p>
+      </td>
+      <td class="methodology-item">
+        <h4>Estándar de referencia</h4>
+        <p>OWASP Top 10 — lista de las vulnerabilidades web más críticas. Los hallazgos están categorizados según CWE (Common Weakness Enumeration).</p>
+      </td>
+    </tr>
+    <tr>
+      <td class="methodology-item">
+        <h4>Tipo de análisis</h4>
+        <p>Análisis dinámico (DAST) — pruebas realizadas sobre la aplicación en ejecución, simulando ataques reales desde el exterior.</p>
+      </td>
+      <td class="methodology-item">
+        <h4>Enriquecimiento con IA</h4>
+        <p>Las descripciones y recomendaciones fueron procesadas con Claude (Anthropic) para ofrecer un lenguaje claro y orientado al negocio.</p>
+      </td>
+    </tr>
+  </table>
+
+  <div class="methodology-list">
+    {% for step in [
+      ("01", "Reconocimiento pasivo y mapeo de la aplicación objetivo"),
+      ("02", "Escaneo activo de vulnerabilidades con OWASP ZAP"),
+      ("03", "Análisis y clasificación de hallazgos por severidad (CVSS)"),
+      ("04", "Validación manual de hallazgos de alta criticidad"),
+      ("05", "Generación de recomendaciones de remediación"),
+      ("06", "Documentación y elaboración del informe final"),
+    ] %}
+    <div class="methodology-list-item">
+      <div class="methodology-list-icon">{{ step[0] }}</div>
+      <div class="methodology-list-text">{{ step[1] }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="background:#161b22; border:1px solid #30363d; border-left:3px solid #30363d; padding:4mm 6mm; margin-top:6mm;">
+    <p style="font-size:8.5pt; color:#8b949e; line-height:1.6;">
+      <strong style="color:#e6edf3;">Alcance y limitaciones:</strong>
+      Este informe representa los resultados del escaneo automatizado realizado en la fecha indicada.
+      Los resultados son válidos únicamente para el estado de la aplicación en el momento del análisis.
+      Se recomienda repetir la auditoría periódicamente y ante cambios significativos en la aplicación.
+      Un escaneo DAST automatizado puede generar falsos positivos; se recomienda validar manualmente
+      los hallazgos críticos antes de iniciar la remediación.
+    </p>
+  </div>
+
+</div><!-- /content -->
+</body>
+</html>

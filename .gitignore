@@ -1,0 +1,25 @@
+# Secretos — NUNCA subir
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# PDFs generados
+*.pdf
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/

