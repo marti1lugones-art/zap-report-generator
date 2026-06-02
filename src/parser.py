@@ -57,6 +57,9 @@ class Finding:
     description_es: Optional[str] = None
     solution_es: Optional[str] = None
 
+    # Origen del hallazgo: "zap" | "headers" | "ssl" | "email"
+    source: str = "zap"
+
 
 class ZAPParser:
     """

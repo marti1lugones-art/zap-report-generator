@@ -114,7 +114,6 @@ class ReportGenerator:
 
         print("📄 Construyendo documento PDF...")
         sev_counts = self._count_by_severity(findings)
-        grouped    = self._group_by_severity(findings)
         date_str   = self._format_date()
 
         print(f"📝 Convirtiendo a PDF → {output_path}")
@@ -127,7 +126,6 @@ class ReportGenerator:
             auditor=auditor,
             chart_b64=chart_b64,
             sev_counts=sev_counts,
-            grouped=grouped,
             date_str=date_str,
         )
 
@@ -137,7 +135,7 @@ class ReportGenerator:
 
     def _build_pdf(self, findings, client_name, target_url, output_path,
                    executive_summary, auditor, chart_b64,
-                   sev_counts, grouped, date_str):
+                   sev_counts, date_str):
 
         # ── Callbacks de página ──────────────────────────────
         def draw_cover(canvas, _):
@@ -202,8 +200,29 @@ class ReportGenerator:
         story += [NextPageTemplate('content'), PageBreak()]
         story += self._section01_executive(executive_summary, target_url, findings)
         story += self._section02_distribution(sev_counts, findings, chart_b64)
-        story += self._section03_findings(grouped)
-        story += self._section04_methodology()
+
+        # Secciones dinámicas por módulo
+        sec = 3
+        source_config = [
+            ("zap",     "Hallazgos OWASP ZAP",
+             "Vulnerabilidades detectadas mediante escaneo dinámico automatizado con OWASP ZAP."),
+            ("headers", "Headers HTTP de Seguridad",
+             "Análisis de headers HTTP de seguridad presentes en la respuesta del servidor."),
+            ("ssl",     "Configuración SSL/TLS",
+             "Evaluación del certificado digital y configuración de protocolos TLS del servidor."),
+            ("email",   "Seguridad de Email (SPF/DKIM/DMARC)",
+             "Verificación de registros DNS que protegen el dominio contra spoofing de correo electrónico."),
+        ]
+        for source, title, desc in source_config:
+            src_findings = [f for f in findings if f.source == source]
+            if src_findings:
+                story += self._section_module_findings(
+                    f"{sec:02d}", title, desc,
+                    self._group_by_severity(src_findings),
+                )
+                sec += 1
+
+        story += self._section_methodology(f"{sec:02d}")
 
         doc.build(story)
 
@@ -302,22 +321,33 @@ class ReportGenerator:
         story = []
         story += self._section_header('01', 'Resumen Ejecutivo')
 
-        if executive_summary:
-            paragraphs = [p.strip() for p in executive_summary.split('\n') if p.strip()]
-        else:
-            n = len(findings)
-            paragraphs = [
-                f'Se realizó una auditoría de seguridad web automatizada sobre '
-                f'<b>{esc(target_url)}</b> utilizando OWASP ZAP. Se identificaron '
-                f'<b>{n} hallazgo{"s" if n != 1 else ""}</b> de seguridad. '
-                f'Se recomienda abordar los hallazgos de mayor severidad de forma prioritaria.'
-            ]
-
         p_style = self._ps('Helvetica', 10, C_TEXT2, leading=17, align=TA_JUSTIFY)
+
+        if executive_summary:
+            # Texto generado por IA: ya es texto plano (el modelo devuelve texto sin HTML),
+            # así que esc() es correcto para escapar cualquier carácter especial.
+            paragraphs = [p.strip() for p in executive_summary.split('\n') if p.strip()]
+            render = [esc(p) for p in paragraphs]
+        else:
+            # Fallback sin IA: texto plano, sin etiquetas HTML para evitar que esc() las muestre literalmente.
+            sources = {f.source for f in findings}
+            modules = []
+            if 'zap' in sources:      modules.append('escaneo OWASP ZAP')
+            if 'headers' in sources:  modules.append('análisis de headers HTTP')
+            if 'ssl' in sources:      modules.append('evaluación SSL/TLS')
+            if 'email' in sources:    modules.append('verificación de seguridad de email')
+            modules_str = ', '.join(modules) if modules else 'auditoría automatizada'
+            n = len(findings)
+            render = [esc(
+                f'Se realizó una auditoría de seguridad web sobre {target_url} utilizando {modules_str}. '
+                f'Se identificaron {n} hallazgo{"s" if n != 1 else ""} de seguridad. '
+                f'Se recomienda priorizar la remediación de los hallazgos de mayor severidad.'
+            )]
+
         content = []
-        for i, p in enumerate(paragraphs):
-            content.append(Paragraph(esc(p), p_style))
-            if i < len(paragraphs) - 1:
+        for i, p in enumerate(render):
+            content.append(Paragraph(p, p_style))
+            if i < len(render) - 1:
                 content.append(Spacer(1, 3 * mm))
 
         box = Table([[content]], colWidths=[FRAME_W])
@@ -397,23 +427,43 @@ class ReportGenerator:
         td = self._ps('Helvetica', 9, C_TEXT2, leading=12)
         td_mono = self._ps('Courier', 8, C_MUTED, leading=11)
         td_num  = self._ps('Helvetica', 8.5, C_MUTED, leading=11, align=TA_CENTER)
+        td_src  = self._ps('Helvetica', 7.5, C_MUTED, leading=10, align=TA_CENTER)
+
+        SOURCE_LABELS = {
+            'zap':     ('ZAP',     HexColor('#4fc3f7')),
+            'headers': ('HDR',     HexColor('#ce93d8')),
+            'ssl':     ('SSL',     HexColor('#80cbc4')),
+            'email':   ('EMAIL',   HexColor('#ffcc80')),
+        }
+        multi_source = len({f.source for f in findings}) > 1
 
         W = FRAME_W
-        col_w = [8 * mm, 22 * mm, W - 8*mm - 22*mm - 20*mm - 18*mm, 20 * mm, 18 * mm]
-        headers = ['#', 'Severidad', 'Vulnerabilidad', 'CWE', 'Inst.']
+        if multi_source:
+            col_w = [8*mm, 22*mm, W - 8*mm - 22*mm - 20*mm - 16*mm - 18*mm, 20*mm, 16*mm, 18*mm]
+            headers = ['#', 'Severidad', 'Vulnerabilidad', 'CWE', 'Módulo', 'Inst.']
+        else:
+            col_w = [8*mm, 22*mm, W - 8*mm - 22*mm - 20*mm - 18*mm, 20*mm, 18*mm]
+            headers = ['#', 'Severidad', 'Vulnerabilidad', 'CWE', 'Inst.']
         tbl_data = [[Paragraph(h, th) for h in headers]]
 
         for i, f in enumerate(findings):
             c = SEVERITY_COLORS.get(f.risk, C_MUTED)
             badge = f'<font color="{_hex(c)}"><b>{SEVERITY_ES.get(f.risk, f.risk).upper()}</b></font>'
             cwe = f'CWE-{f.cwe_id}' if f.cwe_id else '—'
-            tbl_data.append([
+            src_label, src_color = SOURCE_LABELS.get(f.source, ('?', C_MUTED))
+            src_cell = Paragraph(
+                f'<font color="{_hex(src_color)}"><b>{src_label}</b></font>', td_src
+            )
+            row = [
                 Paragraph(str(i + 1), td_num),
                 Paragraph(badge, td),
                 Paragraph(esc(f.name), td),
                 Paragraph(cwe, td_mono),
-                Paragraph(str(f.count), td_num),
-            ])
+            ]
+            if multi_source:
+                row.append(src_cell)
+            row.append(Paragraph(str(f.count), td_num))
+            tbl_data.append(row)
 
         tbl_styles = [
             ('VALIGN',        (0, 0), (-1, -1), 'TOP'),
@@ -437,25 +487,34 @@ class ReportGenerator:
         story.append(Spacer(1, 6 * mm))
         return story
 
-    def _section03_findings(self, grouped):
+    def _section_module_findings(self, number: str, title: str, description: str, grouped: dict):
+        """Sección genérica de hallazgos para cualquier módulo (ZAP, headers, SSL, email)."""
         story = []
-        story += self._section_header('03', 'Hallazgos Detallados')
+        story.append(PageBreak())
+        story += self._section_header(number, title)
 
-        first = True
+        # Descripción del módulo
+        story.append(Paragraph(
+            description,
+            self._ps('Helvetica', 9.5, C_MUTED, leading=15),
+        ))
+        story.append(Spacer(1, 5 * mm))
+
+        desc_map = {
+            'Critical':      'Requiere atención inmediata. Explotación activa probable.',
+            'High':          'Alta prioridad. Riesgo significativo para el negocio.',
+            'Medium':        'Prioridad media. Debe remediarse en el corto plazo.',
+            'Low':           'Impacto limitado. Remediar en ciclo de mantenimiento.',
+            'Informational': 'Sin impacto directo. Buenas prácticas recomendadas.',
+        }
+
+        first_group = True
         for severity, group_findings in grouped.items():
-            if not first:
-                story.append(PageBreak())
+            if not first_group:
+                story.append(Spacer(1, 4 * mm))
 
-            # Encabezado de grupo
             sev_color = SEVERITY_COLORS[severity]
             sev_bg    = SEVERITY_BG[severity]
-            desc_map  = {
-                'Critical':      'Requiere atención inmediata. Explotación activa probable.',
-                'High':          'Alta prioridad. Riesgo significativo para el negocio.',
-                'Medium':        'Prioridad media. Debe remediarse en el corto plazo.',
-                'Low':           'Impacto limitado. Remediar en ciclo de mantenimiento.',
-                'Informational': 'Sin impacto directo. Buenas prácticas recomendadas.',
-            }
             n = len(group_findings)
             grp_content = [
                 Paragraph(
@@ -485,8 +544,12 @@ class ReportGenerator:
                 story.append(self._finding_card(finding, severity))
                 story.append(Spacer(1, 5 * mm))
 
-            first = False
+            first_group = False
         return story
+
+    def _section_methodology(self, number: str):
+        """Wrapper que pasa el número dinámico a la sección de metodología."""
+        return self._section04_methodology(number)
 
     def _finding_card(self, finding, severity):
         sev_color  = SEVERITY_COLORS[severity]
@@ -656,9 +719,9 @@ class ReportGenerator:
         ]))
         return card
 
-    def _section04_methodology(self):
+    def _section04_methodology(self, number: str = '04'):
         story = [PageBreak()]
-        story += self._section_header('04', 'Metodología')
+        story += self._section_header(number, 'Metodología')
 
         story.append(Paragraph(
             'Esta auditoría fue realizada utilizando herramientas y metodologías estándar '
